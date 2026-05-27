@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="glassCardColor" format="color" />
+    <attr name="glassStrokeColor" format="color" />
+    <attr name="accentPrimary" format="color" />
+    <attr name="accentSecondary" format="color" />
+    <attr name="navBackground" format="color" />
+</resources>

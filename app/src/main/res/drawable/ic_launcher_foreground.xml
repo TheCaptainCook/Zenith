@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Zenith Foreground Icon — IFTTT / Automation concept
+    Viewport: 108×108dp  |  Safe zone: 18dp–90dp (72dp usable)
+    Left:  Lightning bolt  (trigger)   — #7C4DFF violet
+    Mid:   Curved flow arrow           — violet→cyan gradient
+    Right: Gear / cog     (action)     — #00E5FF cyan
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- ── Violet glow halo behind bolt ─────────────────────────────── -->
+    <path android:pathData="M34,54m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0"
+        android:fillAlpha="0.35">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="34"
+                android:centerY="54"
+                android:gradientRadius="14"
+                android:type="radial">
+                <item android:color="#FF7C4DFF" android:offset="0.0" />
+                <item android:color="#007C4DFF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- ── Cyan glow halo behind gear ───────────────────────────────── -->
+    <path android:pathData="M76,54m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0"
+        android:fillAlpha="0.35">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="76"
+                android:centerY="54"
+                android:gradientRadius="14"
+                android:type="radial">
+                <item android:color="#FF00E5FF" android:offset="0.0" />
+                <item android:color="#0000E5FF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- ── Flow arrow: cubic bezier approximated as path ────────────── -->
+    <!-- Stroke from (42,54) → (62,54) with S-curve via control pts -->
+    <path
+        android:pathData="M42,54 C46,46 58,62 62,54"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="42"
+                android:startY="54"
+                android:endX="62"
+                android:endY="54"
+                android:type="linear">
+                <item android:color="#FF7C4DFF" android:offset="0.0" />
+                <item android:color="#FF00E5FF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Arrowhead at tip (62,54) pointing right -->
+    <path
+        android:pathData="M62,54 L58,51 L58,57 Z"
+        android:fillColor="#FF00E5FF" />
+
+    <!-- ── Lightning bolt (trigger) ──────────────────────────────────── -->
+    <!--  Classic bolt shape, centred ~(34,54), sized ~18dp tall        -->
+    <path
+        android:pathData="M36.5,40 L30,54 L34.5,54 L31.5,68 L42,52.5 L37,52.5 L43.5,40 Z"
+        android:fillAlpha="1.0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="31"
+                android:startY="40"
+                android:endX="43"
+                android:endY="68"
+                android:type="linear">
+                <item android:color="#FF9D70FF" android:offset="0.0" />
+                <item android:color="#FF7C4DFF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- ── Gear / cog (action) ───────────────────────────────────────── -->
+    <!-- 8-tooth gear, outer r=12, inner r=8.5, centre (76,54)         -->
+    <path
+        android:pathData="
+        M76,42
+        L78.6,43.4 L82.6,40 L86,43.4 L82.6,47.4
+        L84,50 L88,50 L88,58 L84,58
+        L82.6,60.6 L86,64.6 L82.6,68 L78.6,64.6
+        L76,66 L76,70 L68,70 L68,66
+        L65.4,64.6 L61.4,68 L58,64.6 L61.4,60.6
+        L60,58 L56,58 L56,50 L60,50
+        L61.4,47.4 L58,43.4 L61.4,40 L65.4,43.4
+        L68,42 L68,38 L76,38 Z"
+        android:fillAlpha="1.0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="56"
+                android:startY="38"
+                android:endX="88"
+                android:endY="70"
+                android:type="linear">
+                <item android:color="#FF00E5FF" android:offset="0.0" />
+                <item android:color="#FF00B8CC" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Gear hub dark cutout -->
+    <path android:pathData="M76,54m-5.5,0a5.5,5.5 0,1 1,11 0a5.5,5.5 0,1 1,-11 0"
+        android:fillColor="#FF0A0A2E" />
+
+    <!-- Hub accent ring -->
+    <path android:pathData="M76,54m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
+        android:fillColor="#6000E5FF" />
+
+</vector>

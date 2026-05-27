@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Zenith Foreground — GLASS (Glassmorphic Dark) variant
+    Reload ring + right-pointing triangle
+    Colour: deep violet #5533CC
+    Viewport 108×108dp | Safe zone 18–90dp | Centre (54,54)
+
+    Reload ring geometry (radius 26dp, gaps at top/bottom):
+      Arc 1: 285° → 75° clockwise  (through right/east, 150°)
+      Arc 2: 105° → 255° clockwise (through left/west,  150°)
+    Arrowheads at each arc end; triangle centred at (54,54).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Arc 1: 285°→75° clockwise, through right (150°) -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M60.7,28.9 A26,26 0 0,1 60.7,79.1"
+        android:strokeColor="#5533CC"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+
+    <!-- Arrowhead 1 — at 75°, pointing left-and-slightly-down -->
+    <path
+        android:fillColor="#5533CC"
+        android:pathData="M60.7,79.1 L66.5,81.7 L64.5,73.9 Z" />
+
+    <!-- Arc 2: 105°→255° clockwise, through left (150°) -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M47.3,79.1 A26,26 0 0,1 47.3,28.9"
+        android:strokeColor="#5533CC"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+
+    <!-- Arrowhead 2 — at 255°, pointing right-and-slightly-up -->
+    <path
+        android:fillColor="#5533CC"
+        android:pathData="M47.3,28.9 L43.5,34.1 L41.5,26.3 Z" />
+
+    <!-- Right-pointing triangle: right=(67,54), left=(46,43)+(46,65) -->
+    <path
+        android:fillColor="#5533CC"
+        android:pathData="M67,54 L46,43 L46,65 Z" />
+
+</vector>
