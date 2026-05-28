@@ -166,6 +166,11 @@ public class ActionStatePickerDialogFragment extends DialogFragment {
         toolbar.setTitle("Configure Action");
         toolbar.setNavigationOnClickListener(v -> dismiss());
 
+        View searchBox = view.findViewById(R.id.til_search);
+        if (searchBox != null) {
+            searchBox.setVisibility(View.GONE);
+        }
+
         RecyclerView recycler = view.findViewById(R.id.recycler_triggers);
         
         ActionPickerAdapter adapter = new ActionPickerAdapter(getStateOptions(), option -> {

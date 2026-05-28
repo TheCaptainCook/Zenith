@@ -21,7 +21,7 @@ public class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHold
     public interface RuleInteractionListener {
         void onToggleRule(RuleEntity rule, boolean isEnabled);
         void onEditRule(RuleEntity rule);
-        void onDeleteRule(RuleEntity rule);
+        void onDeleteRule(RuleEntity rule, int position);
     }
 
     public RulesAdapter(RuleInteractionListener listener, boolean isSwipeToDelete) {
@@ -100,7 +100,12 @@ public class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHold
             holder.btnDelete.setVisibility(View.GONE);
         } else {
             holder.btnDelete.setVisibility(View.VISIBLE);
-            holder.btnDelete.setOnClickListener(v -> listener.onDeleteRule(rule));
+            holder.btnDelete.setOnClickListener(v -> {
+                int adapterPos = holder.getAdapterPosition();
+                if (adapterPos != RecyclerView.NO_POSITION) {
+                    listener.onDeleteRule(rule, adapterPos);
+                }
+            });
         }
     }
 

@@ -77,7 +77,7 @@ Zenith organizes triggers into **6 distinct categories** to capture any physical
 
 ## ⚡ Supported Actions (100+ Capabilities)
 
-Zenith features a massive library of actions grouped into **20 robust categories**:
+Zenith features a massive library of actions grouped into **19 robust categories**:
 
 1. **🔊 Audio & Volume Control**: Set Ringtone/Media/Alarm/Notification/Call Volume, Mute/Unmute All Sound, Vibrate Mode On/Off, Play Sound/Ringtone, Speak Text (TTS), Increase Volume Gradually, Voice Announcement.
 2. **💡 Device Hardware & System**: Toggle Flashlight/Torch, Set Screen Brightness, Set Screen Timeout, Lock Screen, Toggle Always-On Display, Restart/Shutdown Device (requires root), Set Wallpaper, Take Screenshot, Keep Screen On, Toggle Auto-Rotate, Set Font Size.
@@ -97,8 +97,7 @@ Zenith features a massive library of actions grouped into **20 robust categories
 16. **📋 Clipboard & Text**: Copy/Paste/Clear/Append to Clipboard, Set Clipboard as Variable.
 17. **📳 Vibration & Haptics**: Short Vibrate (100ms), Long Vibrate (500ms), Custom Vibration Pattern, Double Vibrate, Vibrate While Condition True.
 18. **✨ Visual Effects**: Flash Screen, Show Overlay, Change Accent Color (Android 12+), Set Live Wallpaper, Show Toast Message, Show Dialog with Buttons.
-19. **💳 Payment & Transactions (Advanced)**: Open Google Pay, Scan QR Code for Payment, Request Donation, Check Balance.
-20. **🧮 Variable & Math Operations**: Set/Increment/Decrement Variable, Concatenate/Split Text, Math Operation, Compare Values, Generate Random Number, Get Current Timestamp, Get Battery Percentage.
+19. **🧮 Variable & Math Operations**: Set/Increment/Decrement Variable, Concatenate/Split Text, Math Operation, Compare Values, Generate Random Number, Get Current Timestamp, Get Battery Percentage.
 
 ---
 

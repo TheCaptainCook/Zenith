@@ -186,17 +186,7 @@ public class ActionPickerDialogFragment extends DialogFragment {
         list.add(new ActionOption("Fetch RSS Feed", "Read and parse RSS feed content", android.R.drawable.ic_menu_search, "Web & Internet"));
         list.add(new ActionOption("Check Website Status", "Ping a URL to see if it's online", android.R.drawable.ic_menu_search, "Web & Internet"));
         list.add(new ActionOption("Upload File to Server", "FTP or HTTP upload", android.R.drawable.ic_menu_search, "Web & Internet"));
-        list.add(new ActionOption("Smart Home & IoT"));
-        list.add(new ActionOption("Control Philips Hue Lights", "Turn on/off, change color, set brightness", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Control LIFX Lights", "Manage LIFX smart bulbs", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Control TP-Link Kasa", "Smart plugs, bulbs, and switches", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Control Wemo Devices", "Belkin Wemo smart home products", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Send to IFTTT Webhook", "Trigger IFTTT applets", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Send to Zapier Webhook", "Trigger Zapier zaps", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Control Nest Thermostat", "Change temperature, set mode", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Control Roomba", "Start/stop vacuum cleaning", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Open Garage Door", "Trigger MyQ or other smart garage openers", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
-        list.add(new ActionOption("Send to Home Assistant", "Call Home Assistant API", android.R.drawable.ic_menu_agenda, "Smart Home & IoT"));
+
         list.add(new ActionOption("Calendar & Productivity"));
         list.add(new ActionOption("Create Calendar Event", "Add event to Google Calendar", android.R.drawable.ic_menu_today, "Calendar & Productivity"));
         list.add(new ActionOption("Delete Calendar Event", "Remove an event by title/time", android.R.drawable.ic_menu_today, "Calendar & Productivity"));
@@ -265,11 +255,6 @@ public class ActionPickerDialogFragment extends DialogFragment {
         list.add(new ActionOption("Set Live Wallpaper", "Change to animated wallpaper", android.R.drawable.ic_menu_view, "Visual Effects"));
         list.add(new ActionOption("Show Toast Message", "Brief popup at bottom of screen", android.R.drawable.ic_menu_view, "Visual Effects"));
         list.add(new ActionOption("Show Dialog with Buttons", "Interactive popup with Yes/No/Cancel", android.R.drawable.ic_menu_view, "Visual Effects"));
-        list.add(new ActionOption("Payment & Transactions (Advanced)"));
-        list.add(new ActionOption("Open Google Pay", "Launch payment app", android.R.drawable.ic_menu_myplaces, "Payment & Transactions (Advanced)"));
-        list.add(new ActionOption("Scan QR Code for Payment", "Open QR scanner for UPI/crypto", android.R.drawable.ic_menu_myplaces, "Payment & Transactions (Advanced)"));
-        list.add(new ActionOption("Request Donation", "Show donation prompt", android.R.drawable.ic_menu_myplaces, "Payment & Transactions (Advanced)"));
-        list.add(new ActionOption("Check Balance", "Query account balance via API", android.R.drawable.ic_menu_myplaces, "Payment & Transactions (Advanced)"));
         list.add(new ActionOption("Variable & Math Operations"));
         list.add(new ActionOption("Set Variable", "Store a value (number, text, true/false)", android.R.drawable.ic_menu_sort_by_size, "Variable & Math Operations"));
         list.add(new ActionOption("Increment Variable", "Add 1 to a number variable", android.R.drawable.ic_menu_sort_by_size, "Variable & Math Operations"));

@@ -248,6 +248,21 @@ public class ConfigFragment extends Fragment {
         dialog.show();
     }
 
+    private boolean isNotificationServiceEnabled() {
+        String pkgName = requireContext().getPackageName();
+        String flat = Settings.Secure.getString(requireContext().getContentResolver(), "enabled_notification_listeners");
+        if (flat != null && !flat.isEmpty()) {
+            String[] names = flat.split(":");
+            for (String name : names) {
+                android.content.ComponentName cn = android.content.ComponentName.unflattenFromString(name);
+                if (cn != null && android.text.TextUtils.equals(pkgName, cn.getPackageName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private void checkPermissionsAndSave(boolean isActive) {
         this.pendingSaveIsActive = isActive;
         
@@ -262,41 +277,141 @@ public class ConfigFragment extends Fragment {
         }
 
         Set<String> permissionsNeeded = new HashSet<>();
-        String rationaleMessage = "";
+        StringBuilder rationaleMessage = new StringBuilder();
+        boolean needsNotificationListener = false;
+        boolean needsWriteSettings = false;
+        boolean needsDndAccess = false;
 
+        // Check Triggers
+        for (int i = 0; i < containerTriggers.getChildCount(); i++) {
+            View row = containerTriggers.getChildAt(i);
+            android.widget.TextView tv = row.findViewById(R.id.text_selected_trigger);
+            if (tv == null || tv.getText() == null) continue;
+            String triggerType = tv.getText().toString();
+
+            if (triggerType.contains("SMS Received")) {
+                permissionsNeeded.add(Manifest.permission.RECEIVE_SMS);
+                permissionsNeeded.add(Manifest.permission.READ_SMS);
+                rationaleMessage.append("Zenith needs SMS access to read incoming texts.\n\n");
+            } else if (triggerType.contains("Call State")) {
+                permissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
+                rationaleMessage.append("Zenith needs Phone access to detect incoming calls.\n\n");
+            } else if (triggerType.contains("Geofence") || triggerType.contains("Wi-Fi Connected")) {
+                permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    permissionsNeeded.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+                }
+                rationaleMessage.append("Zenith needs Location access to track Geofences and Wi-Fi networks.\n\n");
+            } else if (triggerType.contains("Activity Recognition")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    permissionsNeeded.add(Manifest.permission.ACTIVITY_RECOGNITION);
+                    rationaleMessage.append("Zenith needs Activity Recognition access to detect movement.\n\n");
+                }
+            } else if (triggerType.contains("Bluetooth")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    permissionsNeeded.add(Manifest.permission.BLUETOOTH_CONNECT);
+                    rationaleMessage.append("Zenith needs Bluetooth access to detect connected devices.\n\n");
+                }
+            } else if (triggerType.contains("Notification Received")) {
+                needsNotificationListener = true;
+            }
+        }
+
+        // Check Actions
         for (int i = 0; i < containerActions.getChildCount(); i++) {
             View row = containerActions.getChildAt(i);
             android.widget.TextView textAction = row.findViewById(R.id.text_selected_action);
             if (textAction == null || textAction.getText() == null) continue;
             String actionType = textAction.getText().toString();
 
-            if ("Toggle Flashlight".equals(actionType)) {
-                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    if (!permissionsNeeded.contains(Manifest.permission.CAMERA)) {
-                        permissionsNeeded.add(Manifest.permission.CAMERA);
-                        rationaleMessage += "Zenith needs Camera access to control the Flashlight.\n\n";
-                    }
+            if (actionType.contains("Toggle Flashlight / Torch")) {
+                permissionsNeeded.add(Manifest.permission.CAMERA);
+                rationaleMessage.append("Zenith needs Camera access to control the Flashlight.\n\n");
+            } else if (actionType.contains("Send SMS") || actionType.contains("Reply to SMS") || actionType.contains("Forward SMS") || actionType.contains("Send Alert SMS") || actionType.contains("Send MMS")) {
+                permissionsNeeded.add(Manifest.permission.SEND_SMS);
+                rationaleMessage.append("Zenith needs permission to Send SMS messages automatically.\n\n");
+            } else if (actionType.contains("Make Phone Call") || actionType.contains("Open Dialer")) {
+                permissionsNeeded.add(Manifest.permission.CALL_PHONE);
+                rationaleMessage.append("Zenith needs permission to make phone calls.\n\n");
+            } else if (actionType.contains("Toggle Bluetooth")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    permissionsNeeded.add(Manifest.permission.BLUETOOTH_CONNECT);
+                    rationaleMessage.append("Zenith needs Bluetooth access to turn it on/off.\n\n");
                 }
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if ("Show Notification".equals(actionType)) {
-                    if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                        if (!permissionsNeeded.contains(Manifest.permission.POST_NOTIFICATIONS)) {
-                            permissionsNeeded.add(Manifest.permission.POST_NOTIFICATIONS);
-                            rationaleMessage += "Zenith needs Notification access to display your rule alerts.\n\n";
-                        }
-                    }
-                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && actionType.contains("Show Notification")) {
+                permissionsNeeded.add(Manifest.permission.POST_NOTIFICATIONS);
+                rationaleMessage.append("Zenith needs Notification access to display your rule alerts.\n\n");
+            } else if (actionType.contains("Set Screen Brightness") || actionType.contains("Set Screen Timeout") || actionType.contains("Toggle Auto-Rotate") || actionType.contains("Set Font Size")) {
+                needsWriteSettings = true;
+            } else if (actionType.contains("Enable/Disable Do Not Disturb") || actionType.contains("Set DND Priority Settings")) {
+                needsDndAccess = true;
             }
         }
 
-        if (!permissionsNeeded.isEmpty()) {
+        // Filter already granted permissions
+        Set<String> actuallyNeeded = new HashSet<>();
+        for (String perm : permissionsNeeded) {
+            if (ContextCompat.checkSelfPermission(requireContext(), perm) != PackageManager.PERMISSION_GRANTED) {
+                actuallyNeeded.add(perm);
+            }
+        }
+
+        if (needsNotificationListener && !isNotificationServiceEnabled()) {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Notification Access Required")
+                    .setMessage("To detect incoming notifications, Zenith requires 'Notification Access'. You will be redirected to Settings.")
+                    .setPositiveButton("Open Settings", (dialog, which) -> {
+                        startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            return;
+        }
+
+        if (needsWriteSettings && !Settings.System.canWrite(requireContext())) {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Write Settings Required")
+                    .setMessage("To modify system settings like Brightness or Timeout, Zenith needs 'Write System Settings' permission.")
+                    .setPositiveButton("Open Settings", (dialog, which) -> {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                        intent.setData(android.net.Uri.parse("package:" + requireContext().getPackageName()));
+                        startActivity(intent);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            return;
+        }
+
+        if (needsDndAccess) {
+            android.app.NotificationManager nm = (android.app.NotificationManager) requireContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && !nm.isNotificationPolicyAccessGranted()) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Do Not Disturb Access Required")
+                        .setMessage("To toggle Do Not Disturb mode, Zenith needs 'Do Not Disturb Access'.")
+                        .setPositiveButton("Open Settings", (dialog, which) -> {
+                            startActivity(new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS));
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                return;
+            }
+        }
+
+        if (!actuallyNeeded.isEmpty()) {
+            // Remove duplicates from rationale by converting to Set temporarily
+            Set<String> uniqueRationale = new HashSet<>(java.util.Arrays.asList(rationaleMessage.toString().split("\n\n")));
+            StringBuilder finalRationale = new StringBuilder();
+            for (String s : uniqueRationale) {
+                if (!s.trim().isEmpty()) {
+                    finalRationale.append(s).append("\n\n");
+                }
+            }
+
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Permissions Required")
-                    .setMessage(rationaleMessage.trim())
+                    .setMessage(finalRationale.toString().trim())
                     .setPositiveButton("Continue", (dialog, which) -> {
-                        requestPermissionsLauncher.launch(permissionsNeeded.toArray(new String[0]));
+                        requestPermissionsLauncher.launch(actuallyNeeded.toArray(new String[0]));
                     })
                     .setNegativeButton("Cancel", null)
                     .show();

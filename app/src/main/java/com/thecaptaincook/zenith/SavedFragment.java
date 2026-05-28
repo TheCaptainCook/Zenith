@@ -71,7 +71,7 @@ public class SavedFragment extends Fragment implements RulesAdapter.RuleInteract
                 public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                     int pos = viewHolder.getAdapterPosition();
                     RuleEntity rule = adapter.getRuleAt(pos);
-                    onDeleteRule(rule);
+                    onDeleteRule(rule, pos);
                 }
 
                 @Override
@@ -199,7 +199,10 @@ public class SavedFragment extends Fragment implements RulesAdapter.RuleInteract
     @Override
     public void onToggleRule(RuleEntity rule, boolean isEnabled) {
         rule.isEnabled = isEnabled;
-        executorService.execute(() -> db.ruleDao().update(rule));
+        executorService.execute(() -> {
+            db.ruleDao().update(rule);
+            requireActivity().runOnUiThread(this::reloadAutomationService);
+        });
     }
 
     @Override
@@ -210,7 +213,7 @@ public class SavedFragment extends Fragment implements RulesAdapter.RuleInteract
     }
 
     @Override
-    public void onDeleteRule(RuleEntity rule) {
+    public void onDeleteRule(RuleEntity rule, int position) {
         new AlertDialog.Builder(requireContext())
             .setTitle("Delete Rule")
             .setMessage("Are you sure you want to delete '" + rule.ruleName + "'?")
@@ -218,9 +221,22 @@ public class SavedFragment extends Fragment implements RulesAdapter.RuleInteract
                 executorService.execute(() -> {
                     db.ruleDao().delete(rule);
                     loadRules(); // Refresh list
+                    requireActivity().runOnUiThread(this::reloadAutomationService);
                 });
             })
-            .setNegativeButton("No", null)
+            .setNegativeButton("No", (dialog, which) -> {
+                adapter.notifyItemChanged(position);
+            })
             .show();
+    }
+
+    private void reloadAutomationService() {
+        android.content.Intent serviceIntent = new android.content.Intent(getContext(), AutomationService.class);
+        serviceIntent.setAction("RELOAD_RULES");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            requireContext().startForegroundService(serviceIntent);
+        } else {
+            requireContext().startService(serviceIntent);
+        }
     }
 }
