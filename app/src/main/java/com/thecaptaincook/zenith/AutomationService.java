@@ -26,6 +26,7 @@ import android.os.Vibrator;
 import android.provider.Settings;
 
 import androidx.annotation.Nullable;
+import com.thecaptaincook.zenith.R;
 import androidx.core.app.NotificationCompat;
 
 import org.json.JSONArray;
@@ -80,7 +81,7 @@ public class AutomationService extends Service {
     /** In-memory list of active rules loaded from the database. */
     private List<RuleEntity> activeRules = new ArrayList<>();
     // Per-rule battery-below-20% fired tracking (Issue #12 fix)
-    private java.util.Set<Integer> batteryTriggeredRuleIds = new java.util.HashSet<>();
+    private final java.util.Set<Integer> batteryTriggeredRuleIds = new java.util.HashSet<>();
 
     @Override
     public void onCreate() {
@@ -214,7 +215,7 @@ public class AutomationService extends Service {
                                         @Override
                                         public void onChange(boolean selfChange) {
                                             super.onChange(selfChange);
-                                            handleSystemEvent(getApplicationContext(), new Intent("zenith.SMS_SENT"));
+                                            handleSystemEvent(new Intent("zenith.SMS_SENT"));
                                         }
                                     };
                                     getContentResolver().registerContentObserver(Uri.parse("content://sms"), true, smsObserver);
@@ -243,7 +244,7 @@ public class AutomationService extends Service {
                                                         long now = System.currentTimeMillis();
                                                         if (now - lastShakeTime > 2000) {
                                                             lastShakeTime = now;
-                                                            handleSystemEvent(getApplicationContext(), new Intent("zenith.DEVICE_SHAKE"));
+                                                            handleSystemEvent(new Intent("zenith.DEVICE_SHAKE"));
                                                         }
                                                     }
                                                 }
@@ -294,7 +295,7 @@ public class AutomationService extends Service {
                             if ("Airplane Mode Enabled".equals(t)){ filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED); hasSystemRules = true; }
                         }
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        android.util.Log.e("AutomationService", "JSON parsing error", e);
                     }
                 }
             }
@@ -303,7 +304,7 @@ public class AutomationService extends Service {
                 unifiedReceiver = new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        handleSystemEvent(context, intent);
+                        handleSystemEvent(intent);
                     }
                 };
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -338,7 +339,7 @@ public class AutomationService extends Service {
                         float batteryPct = level * 100 / (float) scale;
                         return batteryPct < 20.0f;
                     }
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
                 return false;
             case "Power Connected":
             case "Power Connected / Disconnected":
@@ -348,16 +349,16 @@ public class AutomationService extends Service {
                     if (batteryStatus != null) {
                         int status = batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
                         boolean isCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING || status == android.os.BatteryManager.BATTERY_STATUS_FULL;
-                        return stateParam == null ? isCharging : (stateParam.equals("Connected") ? isCharging : !isCharging);
+                        return stateParam == null ? isCharging : (stateParam.equals("Connected") == isCharging);
                     }
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
                 return false;
             case "Screen On / Off / Unlocked":
                 try {
                     android.os.PowerManager pm = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
                     boolean isScreenOn = pm != null && pm.isInteractive();
-                    return stateParam == null ? isScreenOn : (stateParam.equals("Screen On") || stateParam.equals("User Present") ? isScreenOn : !isScreenOn);
-                } catch (Exception e) {}
+                    return stateParam == null ? isScreenOn : ((stateParam.equals("Screen On") || stateParam.equals("User Present")) == isScreenOn);
+                } catch (Exception ignored) {}
                 return false;
             case "Screen Turned On":
                 PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -375,7 +376,15 @@ public class AutomationService extends Service {
             case "Headset Plugged":
             case "Headphones Connected":
                 android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
-                return am != null && am.isWiredHeadsetOn();
+                if (am == null) return false;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    android.media.AudioDeviceInfo[] devices = am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS);
+                    for (android.media.AudioDeviceInfo device : devices) {
+                        if (device.getType() == android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES || device.getType() == android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET) return true;
+                    }
+                }
+                //noinspection deprecation
+                return am.isWiredHeadsetOn();
             case "Docked / Undocked":
                 Intent dockIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_DOCK_EVENT));
                 if (dockIntent != null) {
@@ -392,8 +401,8 @@ public class AutomationService extends Service {
             case "Airplane Mode Changed":
                 try {
                     boolean isAirplaneModeOn = android.provider.Settings.Global.getInt(getContentResolver(), android.provider.Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
-                    return stateParam == null ? isAirplaneModeOn : (stateParam.equals("On") ? isAirplaneModeOn : !isAirplaneModeOn);
-                } catch (Exception e) {}
+                    return stateParam == null ? isAirplaneModeOn : (stateParam.equals("On") == isAirplaneModeOn);
+                } catch (Exception ignored) {}
                 return false;
             case "Wi-Fi Connected / Disconnected":
                 try {
@@ -402,9 +411,9 @@ public class AutomationService extends Service {
                         android.net.Network net = cm.getActiveNetwork();
                         android.net.NetworkCapabilities caps = net != null ? cm.getNetworkCapabilities(net) : null;
                         boolean isWifi = caps != null && caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI);
-                        return stateParam == null ? isWifi : (stateParam.equals("Connected") ? isWifi : !isWifi);
+                        return stateParam == null ? isWifi : (stateParam.equals("Connected") == isWifi);
                     }
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
                 return false;
             case "Mobile Data State Changed":
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -425,7 +434,7 @@ public class AutomationService extends Service {
                 try {
                     android.bluetooth.BluetoothAdapter ba2 = android.bluetooth.BluetoothAdapter.getDefaultAdapter();
                     boolean isOn = ba2 != null && ba2.isEnabled();
-                    return stateParam == null ? isOn : (stateParam.equals("On") ? isOn : !isOn);
+                    return stateParam == null ? isOn : (stateParam.equals("On") == isOn);
                 } catch (SecurityException e) { return false; }
             case "SMS Received":
             case "SMS Sent":
@@ -447,10 +456,9 @@ public class AutomationService extends Service {
      * Handles incoming system broadcasts and event intents, matching them against active rules' triggers.
      * Evaluates rule execution logic based on whether ANY or ALL conditions must be met.
      *
-     * @param context The application context.
      * @param intent  The event intent containing the system event data.
      */
-    private void handleSystemEvent(Context context, Intent intent) {
+    private void handleSystemEvent(Intent intent) {
         String action = intent.getAction();
         if (action == null) return;
 
@@ -507,9 +515,19 @@ public class AutomationService extends Service {
                                 isCatalystMet = true; catalystTrigger = fullT;
                             }
                         } else if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(action) && ("WiFi Connected".equals(t) || "Wi-Fi Connected / Disconnected".equals(t))) {
-                            android.net.NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-                            if (info != null) {
-                                boolean isConn = info.isConnected();
+                            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                            boolean isConn = false;
+                            if (cm != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                android.net.Network network = cm.getActiveNetwork();
+                                android.net.NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+                                isConn = capabilities != null && capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI);
+                            } else {
+                                //noinspection deprecation
+                                android.net.NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                                //noinspection deprecation
+                                isConn = info != null && info.isConnected();
+                            }
+                            if (true) {
                                 if (stateParam == null || (stateParam.equals("Connected") && isConn) || (stateParam.equals("Disconnected") && !isConn)) {
                                     isCatalystMet = true; catalystTrigger = fullT;
                                 }
@@ -563,7 +581,7 @@ public class AutomationService extends Service {
         });
     }
 
-    private java.util.Map<Integer, Long> lastExecutionTimes = new java.util.HashMap<>();
+    private final java.util.Map<Integer, Long> lastExecutionTimes = new java.util.HashMap<>();
 
     /**
      * Executes the configured sequence of actions for a given rule on the background thread.
@@ -761,7 +779,7 @@ public class AutomationService extends Service {
                         } else if ("Read File".equals(action)) {
                             readFile(param);
                         } else if ("Delete File".equals(action)) {
-                            deleteFile(param);
+                            deleteFileAction(param);
                         } else if ("Copy File".equals(action) || "Move File".equals(action) || "Rename File".equals(action)) {
                             copyFile(param, !"Copy File".equals(action));
                         } else if ("Create Folder".equals(action)) {
@@ -815,7 +833,7 @@ public class AutomationService extends Service {
                             todoIntent.setType("text/plain");
                             todoIntent.putExtra(Intent.EXTRA_TEXT, "Task: " + (param != null ? param : ""));
                             todoIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            try { startActivity(Intent.createChooser(todoIntent, "Add Task to...").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception e) {}
+                            try { startActivity(Intent.createChooser(todoIntent, "Add Task to...").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) {}
                         } else if ("Create Note".equals(action)) {
                             Intent noteIntent = new Intent("com.google.android.gms.actions.CREATE_NOTE");
                             noteIntent.putExtra(Intent.EXTRA_TEXT, param != null ? param : "");
@@ -825,7 +843,7 @@ public class AutomationService extends Service {
                                 sendIntent.setType("text/plain");
                                 sendIntent.putExtra(Intent.EXTRA_TEXT, param != null ? param : "");
                                 sendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                try { startActivity(Intent.createChooser(sendIntent, "Create Note").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ex) {}
+                                try { startActivity(Intent.createChooser(sendIntent, "Create Note").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) {}
                             }
                         } else if ("Delete Calendar Event".equals(action)) {
                             if (param != null && !param.isEmpty()) {
@@ -851,7 +869,7 @@ public class AutomationService extends Service {
                         } else if ("Log to Spreadsheet".equals(action)) {
                             try {
                                 java.io.File dir = new java.io.File(android.os.Environment.getExternalStorageDirectory(), "ZenithLogs");
-                                if (!dir.exists()) dir.mkdirs();
+                                if (!dir.exists() && !dir.mkdirs()) { android.util.Log.e("AutomationService", "Failed to create directory"); }
                                 java.io.File file = new java.io.File(dir, "spreadsheet_log.csv");
                                 java.io.FileWriter fw = new java.io.FileWriter(file, true);
                                 fw.append("\"").append(new java.util.Date().toString()).append("\",\"").append(param != null ? param : "").append("\"\n");
@@ -934,7 +952,7 @@ public class AutomationService extends Service {
                         } else if ("Set Live Wallpaper".equals(action)) {
                             Intent intent = new Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            try { startActivity(intent); } catch (Exception e) {}
+                            try { startActivity(intent); } catch (Exception ignored) {}
                         } else if ("Show Overlay".equals(action)) {
                             showOverlay(param);
                         } else if ("Start Stopwatch".equals(action)) {
@@ -1023,6 +1041,7 @@ public class AutomationService extends Service {
                                     int maxVol = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC);
                                     int currentVol = am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC);
                                     int targetVol = (int) (maxVol * (Math.max(0, Math.min(100, targetPercent)) / 100.0f));
+                                    //noinspection BusyWait
                                     while (currentVol < targetVol && !Thread.currentThread().isInterrupted()) {
                                         currentVol++;
                                         am.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, currentVol, 0);
@@ -1449,7 +1468,7 @@ public class AutomationService extends Service {
     }
 
     // Issue #5: non-static so variables don't leak between service instances/rule contexts
-    private java.util.Map<String, String> zenithVariables = new java.util.HashMap<>();
+    private final java.util.Map<String, String> zenithVariables = new java.util.HashMap<>();
 
     private void copyToClipboard(String param) {
         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -1463,7 +1482,7 @@ public class AutomationService extends Service {
         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         if (clipboard != null) {
             CharSequence current = "";
-            if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
+            if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClip() != null && clipboard.getPrimaryClip().getItemCount() > 0) {
                 current = clipboard.getPrimaryClip().getItemAt(0).coerceToText(this);
             }
             android.content.ClipData clip = android.content.ClipData.newPlainText("Zenith", current.toString() + (param != null ? param : ""));
@@ -1484,7 +1503,7 @@ public class AutomationService extends Service {
 
     private void setClipboardAsVariable(String param) {
         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        if (clipboard != null && clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
+        if (clipboard != null && clipboard.hasPrimaryClip() && clipboard.getPrimaryClip() != null && clipboard.getPrimaryClip().getItemCount() > 0) {
             CharSequence current = clipboard.getPrimaryClip().getItemAt(0).coerceToText(this);
             zenithVariables.put(param != null && !param.isEmpty() ? param : "clipboard", current.toString());
         }
@@ -1587,7 +1606,7 @@ public class AutomationService extends Service {
         try {
             java.io.File currentDB = getDatabasePath("zenith_database");
             java.io.File backupDir = new java.io.File(getExternalFilesDir(null), "backups");
-            if (!backupDir.exists()) backupDir.mkdirs();
+            if (!backupDir.exists() && !backupDir.mkdirs()) { android.util.Log.e("AutomationService", "Failed to create directory"); }
             java.io.File backupDB = new java.io.File(backupDir, "zenith_database_backup.db");
             
             if (currentDB.exists()) {
@@ -1647,7 +1666,7 @@ public class AutomationService extends Service {
                     writeToFile("usage_log.txt:Usage stats unavailable (needs permission) at " + new java.util.Date().toString());
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
     }
 
     private void logScreenTime() {
@@ -1669,7 +1688,7 @@ public class AutomationService extends Service {
             } else {
                 logBody.append("No system logs found.");
             }
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
         
         android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_SENDTO);
         intent.setData(android.net.Uri.parse("mailto:"));
@@ -1677,7 +1696,7 @@ public class AutomationService extends Service {
         intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Zenith Logs");
         intent.putExtra(android.content.Intent.EXTRA_TEXT, logBody.toString());
         intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
-        try { startActivity(intent); } catch (Exception e) {}
+        try { startActivity(intent); } catch (Exception ignored) {}
     }
 
     /**
@@ -1705,7 +1724,7 @@ public class AutomationService extends Service {
     private void takeHiddenPhoto() {
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE_SECURE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        try { startActivity(intent); } catch (Exception e) {}
+        try { startActivity(intent); } catch (Exception ignored) {}
     }
 
     /**
@@ -1719,7 +1738,7 @@ public class AutomationService extends Service {
         param = param.trim();
         String currentStr = zenithVariables.get(param);
         int val = 0;
-        try { if (currentStr != null) val = Integer.parseInt(currentStr); } catch (Exception e) {}
+        try { if (currentStr != null) val = Integer.parseInt(currentStr); } catch (Exception ignored) {}
         zenithVariables.put(param, String.valueOf(val + amount));
     }
 
@@ -1854,7 +1873,7 @@ public class AutomationService extends Service {
                 int max = Integer.parseInt(minMax[1].trim());
                 int rand = new java.util.Random().nextInt((max - min) + 1) + min;
                 zenithVariables.put(varName, String.valueOf(rand));
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
         }
     }
 
@@ -1886,7 +1905,7 @@ public class AutomationService extends Service {
                 mainHandler.postDelayed(() -> {
                     android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS, oldBright);
                 }, 500);
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
         });
     }
 
@@ -1918,7 +1937,7 @@ public class AutomationService extends Service {
                     wm.addView(tv, params);
                     mainHandler.postDelayed(() -> wm.removeView(tv), 3000);
                 }
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
         });
     }
 
@@ -1959,11 +1978,11 @@ public class AutomationService extends Service {
                         showToast("Read " + param + ": " + sb.toString().trim());
                     }
                 }
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
         });
     }
 
-    private void deleteFile(String param) {
+    private void deleteFileAction(String param) {
         if (param == null || param.isEmpty()) return;
         java.io.File file = new java.io.File(param.startsWith("/") ? param : getExternalFilesDir(null) + "/" + param);
         if (file.exists()) {
@@ -1990,7 +2009,7 @@ public class AutomationService extends Service {
 
     private void createFolder(String param) {
         if (param == null || param.isEmpty()) return;
-        new java.io.File(param).mkdirs();
+        boolean ignored = new java.io.File(param).mkdirs();
     }
 
     private void backupFile(String param) {
@@ -2072,7 +2091,7 @@ public class AutomationService extends Service {
         if (parts.length < 2) return;
         java.io.File zipFile = new java.io.File(parts[0]);
         java.io.File destDir = new java.io.File(parts[1]);
-        if (!destDir.exists()) destDir.mkdirs();
+        if (!destDir.exists() && !destDir.mkdirs()) { android.util.Log.e("AutomationService", "Failed to create directory"); }
         try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(new java.io.FileInputStream(zipFile))) {
             java.util.zip.ZipEntry zipEntry = zis.getNextEntry();
             String destCanonical = destDir.getCanonicalPath();
@@ -2086,9 +2105,9 @@ public class AutomationService extends Service {
                     continue;
                 }
                 if (zipEntry.isDirectory()) {
-                    newFile.mkdirs();
+                    boolean ignoredDir = newFile.mkdirs();
                 } else {
-                    newFile.getParentFile().mkdirs();
+                    boolean ignoredParent = newFile.getParentFile().mkdirs();
                     try (java.io.FileOutputStream fos = new java.io.FileOutputStream(newFile)) {
                         byte[] buffer = new byte[4096];
                         int len;
@@ -2263,7 +2282,7 @@ public class AutomationService extends Service {
             android.net.wifi.WifiManager wifiManager = (android.net.wifi.WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wifiManager != null) {
                 wifiManager.addNetwork(conf);
-                if (androidx.core.app.ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                if (androidx.core.app.ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     java.util.List<android.net.wifi.WifiConfiguration> list = wifiManager.getConfiguredNetworks();
                     if (list != null) {
                         for (android.net.wifi.WifiConfiguration i : list) {
@@ -2286,7 +2305,7 @@ public class AutomationService extends Service {
         if (adapter == null) return;
         try {
             android.bluetooth.BluetoothDevice device = adapter.getRemoteDevice(macAddress);
-            if (androidx.core.app.ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            if (androidx.core.app.ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                 return;
             }
             if (device.getBondState() != android.bluetooth.BluetoothDevice.BOND_BONDED) {
@@ -2360,6 +2379,7 @@ public class AutomationService extends Service {
         new Thread(() -> {
             try {
                 int orig = android.provider.Settings.System.getInt(getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
+                //noinspection BusyWait
                 for (int i = 0; i < 3; i++) {
                     android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS, 255);
                     Thread.sleep(150);
