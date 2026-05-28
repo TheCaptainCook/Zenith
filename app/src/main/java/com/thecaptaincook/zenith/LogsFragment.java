@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -150,14 +150,33 @@ public class LogsFragment extends Fragment implements LogsAdapter.LogInteraction
     }
 
     private void clearLogs() {
-        new AlertDialog.Builder(requireContext())
-            .setTitle("Clear Logs")
-            .setMessage("Are you sure you want to delete all execution history?")
-            .setPositiveButton("Clear", (dialog, which) -> {
-                executorService.execute(() -> db.logDao().clearAllLogs());
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+        android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_rule_summary, null);
+        android.widget.TextView tvTitle = dialogView.findViewById(R.id.text_dialog_title);
+        android.widget.TextView tvMessage = dialogView.findViewById(R.id.text_dialog_message);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btn_dialog_cancel);
+        android.widget.Button btnClear = dialogView.findViewById(R.id.btn_dialog_save);
+
+        tvTitle.setText("Clear Logs");
+        tvMessage.setText("Are you sure you want to delete all execution history?");
+        btnCancel.setText("Cancel");
+        btnClear.setText("Clear");
+        btnClear.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#D32F2F")));
+
+        androidx.appcompat.app.AlertDialog dialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnClear.setOnClickListener(v -> {
+            dialog.dismiss();
+            executorService.execute(() -> db.logDao().clearAllLogs());
+        });
+
+        dialog.show();
     }
 
     private void exportLogs() {
@@ -185,14 +204,14 @@ public class LogsFragment extends Fragment implements LogsAdapter.LogInteraction
                 writer.close();
 
                 requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "Exported to: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                    ThemePrompt.show(getView(), "Exported to: " + file.getAbsolutePath());
                     // Optional: Setup FileProvider and ACTION_SEND intent here if sharing is desired.
                 });
 
             } catch (Exception e) {
                 e.printStackTrace();
                 requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "Export failed", Toast.LENGTH_SHORT).show();
+                    ThemePrompt.show(getView(), "Export failed");
                 });
             }
         });
@@ -203,14 +222,33 @@ public class LogsFragment extends Fragment implements LogsAdapter.LogInteraction
         java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("MMM dd, yyyy HH:mm:ss", java.util.Locale.getDefault());
         String timeStr = format.format(new java.util.Date(log.timestamp));
 
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Log Details")
-                .setMessage("Rule: " + log.ruleName + "\n" +
-                            "Time: " + timeStr + "\n" +
-                            "Status: " + log.status + "\n\n" +
-                            "Details:\n" + log.details)
-                .setPositiveButton("Close", null)
-                .show();
+        android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_rule_summary, null);
+        android.widget.TextView tvTitle = dialogView.findViewById(R.id.text_dialog_title);
+        android.widget.TextView tvMessage = dialogView.findViewById(R.id.text_dialog_message);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btn_dialog_cancel);
+        android.widget.Button btnClose = dialogView.findViewById(R.id.btn_dialog_save);
+
+        tvTitle.setText("Log Details");
+        tvMessage.setText("Rule: " + log.ruleName + "\n" +
+                          "Time: " + timeStr + "\n" +
+                          "Status: " + log.status + "\n\n" +
+                          "Details:\n" + log.details);
+        tvMessage.setTextAlignment(android.view.View.TEXT_ALIGNMENT_TEXT_START);
+
+        btnCancel.setVisibility(android.view.View.GONE);
+        btnClose.setText("Close");
+
+        androidx.appcompat.app.AlertDialog dialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 
     @Override

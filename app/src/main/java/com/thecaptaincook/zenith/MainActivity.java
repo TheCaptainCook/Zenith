@@ -6,6 +6,8 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
+    
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
         
         loadFragment(configFragment);
     }
+
+
 
     public void navigateToSavedRules() {
         BottomNavigationView navView = findViewById(R.id.nav_view);

@@ -5,7 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -124,7 +124,7 @@ public class TriggerStatePickerDialogFragment extends DialogFragment {
         btnSave.setOnClickListener(v -> {
             String input = editInput.getText() != null ? editInput.getText().toString().trim() : "";
             if (input.isEmpty()) {
-                Toast.makeText(getContext(), "Parameter cannot be empty", Toast.LENGTH_SHORT).show();
+                ThemePrompt.show(getView(), "Parameter cannot be empty");
                 return;
             }
             if (listener != null) {

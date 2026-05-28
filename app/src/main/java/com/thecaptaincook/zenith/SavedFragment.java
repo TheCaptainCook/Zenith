@@ -214,20 +214,41 @@ public class SavedFragment extends Fragment implements RulesAdapter.RuleInteract
 
     @Override
     public void onDeleteRule(RuleEntity rule, int position) {
-        new AlertDialog.Builder(requireContext())
-            .setTitle("Delete Rule")
-            .setMessage("Are you sure you want to delete '" + rule.ruleName + "'?")
-            .setPositiveButton("Yes", (dialog, which) -> {
-                executorService.execute(() -> {
-                    db.ruleDao().delete(rule);
-                    loadRules(); // Refresh list
-                    requireActivity().runOnUiThread(this::reloadAutomationService);
-                });
-            })
-            .setNegativeButton("No", (dialog, which) -> {
-                adapter.notifyItemChanged(position);
-            })
-            .show();
+        android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_rule_summary, null);
+        android.widget.TextView tvTitle = dialogView.findViewById(R.id.text_dialog_title);
+        android.widget.TextView tvMessage = dialogView.findViewById(R.id.text_dialog_message);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btn_dialog_cancel);
+        android.widget.Button btnDelete = dialogView.findViewById(R.id.btn_dialog_save);
+
+        tvTitle.setText("Delete " + rule.ruleName + " Rule");
+        tvMessage.setText("Are you sure you want to delete this rule?");
+        btnCancel.setText("Cancel");
+        btnDelete.setText("Delete");
+        btnDelete.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#D32F2F")));
+
+        androidx.appcompat.app.AlertDialog dialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        btnCancel.setOnClickListener(v -> {
+            dialog.dismiss();
+            adapter.notifyItemChanged(position);
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            dialog.dismiss();
+            executorService.execute(() -> {
+                db.ruleDao().delete(rule);
+                loadRules(); // Refresh list
+                requireActivity().runOnUiThread(this::reloadAutomationService);
+            });
+        });
+
+        dialog.show();
     }
 
     private void reloadAutomationService() {

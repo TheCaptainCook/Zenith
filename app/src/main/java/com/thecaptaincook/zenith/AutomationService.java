@@ -25,8 +25,8 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.Nullable;
-import com.thecaptaincook.zenith.R;
 import androidx.core.app.NotificationCompat;
 
 import org.json.JSONArray;
@@ -57,6 +57,7 @@ import java.util.concurrent.Executors;
  * data leakage.
  * </p>
  */
+@SuppressLint("MissingPermission")
 public class AutomationService extends Service {
 
     private static final String CHANNEL_ID = "zenith_engine_channel";
@@ -98,7 +99,7 @@ public class AutomationService extends Service {
                 textToSpeech.setLanguage(java.util.Locale.getDefault());
             }
         });
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(NOTIFICATION_ID, getPersistentNotification(),
                     android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         } else {
@@ -307,11 +308,7 @@ public class AutomationService extends Service {
                         handleSystemEvent(intent);
                     }
                 };
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    registerReceiver(unifiedReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-                } else {
-                    registerReceiver(unifiedReceiver, filter);
-                }
+                androidx.core.content.ContextCompat.registerReceiver(getApplicationContext(), unifiedReceiver, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
             }
         });
     }
@@ -1511,7 +1508,7 @@ public class AutomationService extends Service {
 
     private void showToast(String param) {
         android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-        handler.post(() -> android.widget.Toast.makeText(getApplicationContext(), param, android.widget.Toast.LENGTH_LONG).show());
+        handler.post(() -> ThemePrompt.showToast(getApplicationContext(), param));
     }
 
     private void showDialog(String param) {

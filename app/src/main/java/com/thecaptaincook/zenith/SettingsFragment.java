@@ -15,7 +15,7 @@ import android.widget.AdapterView;
 import android.widget.Spinner;
 
 import com.google.android.material.materialswitch.MaterialSwitch;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -242,11 +242,11 @@ public class SettingsFragment extends Fragment {
                     out.write(jsonArray.toString(4).getBytes());
                     out.flush();
                     out.close();
-                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Backup Successful!", Toast.LENGTH_SHORT).show());
+                    requireActivity().runOnUiThread(() -> ThemePrompt.show(getView(), "Backup Successful!"));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Backup Failed", Toast.LENGTH_SHORT).show());
+                requireActivity().runOnUiThread(() -> ThemePrompt.show(getView(), "Backup Failed"));
             }
         });
     }
@@ -278,7 +278,7 @@ public class SettingsFragment extends Fragment {
                     }
                     
                     requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Restore Successful!", Toast.LENGTH_SHORT).show();
+                        ThemePrompt.show(getView(), "Restore Successful!");
                         Intent serviceIntent = new Intent(getContext(), AutomationService.class);
                         serviceIntent.setAction("RELOAD_RULES");
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -290,7 +290,7 @@ public class SettingsFragment extends Fragment {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Restore Failed: Invalid File", Toast.LENGTH_SHORT).show());
+                requireActivity().runOnUiThread(() -> ThemePrompt.show(getView(), "Restore Failed: Invalid File"));
             }
         });
     }
@@ -306,7 +306,7 @@ public class SettingsFragment extends Fragment {
                 executorService.execute(() -> {
                     db.clearAllTables();
                     requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "App reset successfully.", Toast.LENGTH_LONG).show();
+                        ThemePrompt.show(getView(), "App reset successfully.");
                         applyTheme(0);
                         Intent serviceIntent = new Intent(getContext(), AutomationService.class);
                         serviceIntent.setAction("RELOAD_RULES");

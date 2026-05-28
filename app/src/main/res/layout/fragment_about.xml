@@ -52,10 +52,13 @@
                     android:padding="24dp">
 
                     <ImageView
+                        android:id="@+id/about_app_logo"
                         android:layout_width="80dp"
                         android:layout_height="80dp"
                         android:layout_marginBottom="16dp"
-                        android:src="@mipmap/ic_launcher_glass" />
+                        android:src="@mipmap/ic_launcher_glass"
+                        android:clickable="true"
+                        android:focusable="true" />
 
                     <TextView
                         android:layout_width="wrap_content"

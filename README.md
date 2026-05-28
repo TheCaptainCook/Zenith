@@ -24,6 +24,8 @@ Tailor your interactive experience in Saved Rules and Execution Logs:
 * **Swipe-to-Delete**: Use fluid left-swipe gestures to discard items dynamically (powered by `ItemTouchHelper`).
 * **Button-Delete**: Prefer traditional controls? Toggle the setting to display dedicated delete buttons directly on cards.
 
+
+
 ---
 
 ## 🚀 Supported Triggers
@@ -138,6 +140,8 @@ Rules are persistent model entities mapped to the SQLite database via Android Ro
 | `triggerLogic` | `String` | `"ANY"` or `"ALL"`. |
 | `actionsJson` | `String` (JSON) | Serialized list of `Action` objects. |
 | `isActive` | `boolean` | Enabled/disabled toggle. |
+
+
 
 ---
 

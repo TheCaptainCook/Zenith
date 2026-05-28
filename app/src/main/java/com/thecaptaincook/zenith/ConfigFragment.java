@@ -16,7 +16,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -74,7 +74,7 @@ public class ConfigFragment extends Fragment {
             if (allGranted) {
                 checkExactAlarmAndSave();
             } else {
-                Toast.makeText(getContext(), "Required permissions were denied.", Toast.LENGTH_SHORT).show();
+                ThemePrompt.show(getView(), "Required permissions were denied.");
             }
         });
 
@@ -267,12 +267,12 @@ public class ConfigFragment extends Fragment {
         this.pendingSaveIsActive = isActive;
         
         if (containerTriggers.getChildCount() == 0) {
-            Toast.makeText(getContext(), "Please add at least one trigger", Toast.LENGTH_SHORT).show();
+            ThemePrompt.show(getView(), "Please add at least one trigger");
             return;
         }
 
         if (containerActions.getChildCount() == 0) {
-            Toast.makeText(getContext(), "Please add at least one action", Toast.LENGTH_SHORT).show();
+            ThemePrompt.show(getView(), "Please add at least one action");
             return;
         }
 
@@ -570,7 +570,7 @@ public class ConfigFragment extends Fragment {
     private void saveRule(boolean isActive) {
         String ruleName = editRuleName.getText() != null ? editRuleName.getText().toString() : "";
         if (ruleName.isEmpty()) {
-            Toast.makeText(getContext(), "Please enter a rule name", Toast.LENGTH_SHORT).show();
+            ThemePrompt.show(getView(), "Please enter a rule name");
             return;
         }
 
@@ -631,7 +631,7 @@ public class ConfigFragment extends Fragment {
             
             requireActivity().runOnUiThread(() -> {
                 String msg = isActive ? "Rule saved!" : "Saved to Drafts!";
-                Toast.makeText(getContext(), existingRule != null ? (isActive ? "Rule updated!" : "Updated and moved to Drafts!") : msg, Toast.LENGTH_SHORT).show();
+                ThemePrompt.show(requireActivity().findViewById(android.R.id.content), existingRule != null ? (isActive ? "Rule updated!" : "Updated and moved to Drafts!") : msg);
                 
                 Intent serviceIntent = new Intent(getContext(), AutomationService.class);
                 serviceIntent.setAction("RELOAD_RULES");
