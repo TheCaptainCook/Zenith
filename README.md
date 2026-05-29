@@ -134,8 +134,6 @@ flutter run
 
 ---
 
-## 🤝 Contributing
-We welcome contributions! Please review the [Phased Development Plan](./docs/phased_development_plan.md) to see what Phase the project is currently in before opening a Pull Request.
 
 ## License
 
