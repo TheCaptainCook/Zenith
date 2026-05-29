@@ -18,15 +18,6 @@ Zenith is a premium, highly fluid, and 100% open-source alternative to IFTTT and
 - **Task Queue / Engine**: Redis + BullMQ (NestJS Microservice)
 - **Security**: `@boringnode/encryption` (chacha20poly1305)
 
-## 📚 Documentation
-Detailed documentation for the architecture, APIs, and project phases can be found in the `docs/` directory. If you are new to the project, please read these first:
-- [Phased Development Plan](./docs/phased_development_plan.md)
-- [Product Requirements Document (PRD)](./docs/prd.md)
-- [Technical Architecture](./docs/technical_architecture.md)
-- [Database Schema](./docs/database_schema.md)
-- [API Specification](./docs/api_design.md)
-- [UI / UX Guidelines](./docs/ui_ux_guidelines.md)
-- [Troubleshooting Guide](./docs/troubleshooting.md)
 
 ---
 
